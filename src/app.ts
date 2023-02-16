@@ -121,7 +121,7 @@ export class App {
 
   public Start() {
     mongoose
-      .connect(env.MONGO_URI_LOCAL)
+      .connect('mongodb+srv://superconscience:QrtczmnqiciavAoI@node.wiauk.mongodb.net/?retryWrites=true&w=majority')
       .then((result) => {
         // serversController.seedServers();
         this.server.listen(this.port, () => {
