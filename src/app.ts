@@ -38,6 +38,9 @@ const mongooseUrl = isLocalConnection
 
 type AppClients = Record<string, AppSocket>;
 
+const mongoURL = 'mongodb+srv://superconscience:QrtczmnqiciavAoI@node.wiauk.mongodb.net/?retryWrites=true&w=majority';
+const sessionSecret = 'sessionsecret';
+
 export class App {
   private server: http.Server;
   private port: number;
@@ -76,9 +79,9 @@ export class App {
       session({
         resave: true,
         saveUninitialized: true,
-        secret: env.SESSION_SECRET,
+        secret: sessionSecret,
         store: new MongoStore({
-          mongoUrl: env.MONGO_URI_LOCAL,
+          mongoUrl: mongoURL,
           mongoOptions: {
             connectTimeoutMS: 10000,
           },
@@ -121,7 +124,7 @@ export class App {
 
   public Start() {
     mongoose
-      .connect('mongodb+srv://superconscience:QrtczmnqiciavAoI@node.wiauk.mongodb.net/?retryWrites=true&w=majority')
+      .connect(mongoURL)
       .then((result) => {
         // serversController.seedServers();
         this.server.listen(this.port, () => {
@@ -148,4 +151,4 @@ export class App {
   }
 }
 
-new App(env.PORT).Start();
+new App(Number(process.env.PORT) ?? 8000).Start();
