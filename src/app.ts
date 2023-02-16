@@ -121,7 +121,7 @@ export class App {
 
   public Start() {
     mongoose
-      .connect(env.MONGO_URI)
+      .connect(env.MONGO_URI_LOCAL)
       .then((result) => {
         // serversController.seedServers();
         this.server.listen(this.port, () => {
