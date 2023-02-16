@@ -38,7 +38,7 @@ const mongooseUrl = isLocalConnection
 
 type AppClients = Record<string, AppSocket>;
 
-const mongoURL = 'mongodb+srv://superconscience:QrtczmnqiciavAoI@node.wiauk.mongodb.net/?retryWrites=true&w=majority';
+const mongoURL = 'mongodb+srv://superconscience:QrtczmnqiciavAoI@node.wiauk.mongodb.net/discord?retryWrites=true&w=majority';
 const sessionSecret = 'sessionsecret';
 
 export class App {
