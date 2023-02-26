@@ -26,7 +26,7 @@ declare module "express-session" {
   }
 }
 
-const whitelist = ['http://localhost:3000', 'http://localhost:8005'];
+const whitelist = ['http://localhost:3000', 'http://localhost:8005', 'https://server-production-b796.up.railway.app'];
 
 mongoose.set('strictQuery', true);
 
