@@ -1,5 +1,6 @@
 import express from 'express';
 import userController from '../controllers/users';
+import uploader from '../utils/upload';
 
 const router = express.Router();
 
@@ -14,7 +15,9 @@ router.get('/:id', userController.getUser);
 router.get('/:id/friends', userController.getFriends);
 router.get('/:id/invited-to-friends', userController.getInvitedToFriends);
 router.get('/:id/invited-from-friends', userController.getInvitedFromFriends);
-router.patch('/:id', userController.updateUser);
+router.get('/:id/related-servers', userController.getRelatedServers);
+router.get('/:id/related-channels', userController.getRelatedChannels);
+router.patch('/:id', uploader.single('profile[avatar]'), userController.updateUser);
 router.delete('/:id', userController.deleteUser);
 
 router.get('/:id/friends', userController.getFriends);

@@ -14,6 +14,8 @@ export interface UserDocument extends mongoose.Document {
   friends: Types.ObjectId[];
   invitesFrom: Types.ObjectId[];
   invitesTo: Types.ObjectId[];
+  invitesToChannels: Types.ObjectId[];
+  joinedChannels: Types.ObjectId[];
   chats: UserDocument[];
   availability: Availability;
   profile: {
@@ -23,6 +25,7 @@ export interface UserDocument extends mongoose.Document {
   };
   comparePassword: comparePasswordFunction;
   tokens: AuthToken[];
+  createdAt: Date;
 }
 
 export interface AuthToken {
@@ -63,6 +66,8 @@ const UserSchema = new Schema<UserDocument>(
     friends: [{ type: Types.ObjectId, ref: 'User' }],
     invitesFrom: [{ type: Types.ObjectId, ref: 'User' }],
     invitesTo: [{ type: Types.ObjectId, ref: 'User' }],
+    invitesToChannels: [{ type: Types.ObjectId, ref: 'Channel' }],
+    joinedChannels: [{ type: Types.ObjectId, ref: 'Channel' }],
     chats: [{ 
       type: Types.ObjectId, 
       ref: 'User', 

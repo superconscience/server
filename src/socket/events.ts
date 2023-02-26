@@ -17,12 +17,20 @@ export const bindSocketEvents = (
     }
   });
 
+  socket.on('userRegistered', (data) => {
+    io.emit('userRegistered', data);
+  });
+
   socket.on('userLoggedIn', ({ userId }) => {
-    socket.broadcast.emit('userChangedAvailability', { userId });
+    socket.broadcast.emit('userChangedAvailability', { userId, availability: Availability.Online });
   });
 
   socket.on('userLoggedOut', ({ userId }) => {
-    socket.broadcast.emit('userChangedAvailability', { userId });
+    socket.broadcast.emit('userChangedAvailability', { userId, availability: Availability.Offline });
+  });
+
+  socket.on('accountUpdated', (data) => {
+    socket.broadcast.emit('accountUpdated', data);
   });
 
   socket.on('personalMessage', (data) => {
@@ -35,6 +43,18 @@ export const bindSocketEvents = (
 
   socket.on('personalMessageDeleted', (data) => {
     io.emit('personalMessageDeleted', data);
+  });
+
+  socket.on('channelMessage', (data) => {
+    io.emit('channelMessage', data);
+  });
+
+  socket.on('channelMessageUpdated', (data) => {
+    io.emit('channelMessageUpdated', data);
+  });
+
+  socket.on('channelMessageDeleted', (data) => {
+    io.emit('channelMessageDeleted', data);
   });
 
   socket.on('userInvitedToFriends', (data) => {
@@ -51,5 +71,13 @@ export const bindSocketEvents = (
 
   socket.on('friendDeleted', (data) => {
     io.emit('friendDeleted', data);
+  });
+
+  socket.on('userInvitedToChannel', (data) => {
+    io.emit('userInvitedToChannel', data);
+  });
+
+  socket.on('serverAdded', (data) => {
+    io.emit('serverAdded', data);
   });
 };

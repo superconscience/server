@@ -1,15 +1,18 @@
+import { DTOServer, DTOUser } from 'dto';
 import { Handler, NextFunction, Request, Response } from 'express';
 import { body, check, validationResult } from 'express-validator';
+import { TypedRequest } from 'express.types';
+import fs from 'fs';
+import mongoose, { HydratedDocument } from 'mongoose';
 import passport from 'passport';
 import { IVerifyOptions } from 'passport-local';
+import sharp from 'sharp';
+import Server from '../models/server';
+import Channel from '../models/channel';
 import User, { Availability, UserDocument, validateUserField } from '../models/user';
 import '../passport';
-import { FetchedUser, userDTO } from '../utils/dto';
-import { App } from '../app';
-import { TypedRequest } from 'express.types';
-import mongoose, { HydratedDocument } from 'mongoose';
-import { requestErrorHandler } from '../utils/functions';
-import { DTOUser } from 'dto';
+import { FetchedChannel, FetchedServer, FetchedUser, serverDTO, userDTO } from '../utils/dto';
+import { handleDocumentNotFound, requestErrorHandler } from '../utils/functions';
 
 const checkAuth = (req: Request, res: Response, next: NextFunction): void => {
   if (req.user) {
@@ -39,7 +42,6 @@ const login = async (req: TypedRequest, res: Response, next: NextFunction): Prom
   passport.authenticate('local', (err: Error, user: UserDocument, info: IVerifyOptions) => {
     if (err) {
       return next(err);
-      return;
     }
     if (!user) {
       res.status(401).json({ message: info.message });
@@ -51,6 +53,7 @@ const login = async (req: TypedRequest, res: Response, next: NextFunction): Prom
       }
       const { id } = user;
       User.findById(id)
+        .populate(['chats', 'invitesToChannels', 'joinedChannels'])
         .then((user) => {
           if (!user) {
             const error = new Error('Could not find user.');
@@ -71,6 +74,9 @@ const login = async (req: TypedRequest, res: Response, next: NextFunction): Prom
 };
 
 const logout = (req: TypedRequest, res: Response, next: NextFunction): void => {
+  if (!req.user) {
+    res.send(200).end();
+  }
   const { id } = req.user as HydratedDocument<UserDocument>;
   req.logout((err) => {
     if (err) {
@@ -112,7 +118,7 @@ const register = async (req: Request, res: Response, next: NextFunction): Promis
     email: req.body.email,
     password: req.body.password,
     name: req.body.name,
-    phone: req.body.phone,
+    availability: Availability.Online,
   });
 
   User.findOne({ email: req.body.email }, (err: NativeError, existingUser: UserDocument) => {
@@ -131,7 +137,7 @@ const register = async (req: Request, res: Response, next: NextFunction): Promis
         if (err) {
           return next(err);
         }
-        res.status(200).end();
+        res.status(200).json({ user: userDTO(user) });
       });
     });
   });
@@ -144,7 +150,7 @@ const getUsers: Handler = (req, res, next) => {
     .countDocuments()
     .then((count) => {
       docsCount = count;
-      return User.find().populate('chats');
+      return User.find().populate(['chats', 'invitesToChannels', 'joinedChannels']);
     })
     .then((users) => {
       const exportedUsers = users.map((u) => userDTO(u));
@@ -189,6 +195,7 @@ const createUser: Handler = (req, res, next) => {
 const getUser: Handler = (req, res, next) => {
   const userId = req.params.id;
   User.findById(userId)
+    .populate(['chats', 'invitesToChannels', 'joinedChannels'])
     .then((user) => {
       if (!user) {
         const error = new Error('Could not find user.');
@@ -226,7 +233,10 @@ const searchUsers: Handler = (req, res, next) => {
 };
 
 const updateUser = (
-  req: TypedRequest<{ socketId: string; remove: (keyof DTOUser)[] | undefined }, DTOUser>,
+  req: TypedRequest<
+    { socketId: string; remove: (keyof DTOUser)[] | undefined },
+    DTOUser & { invitesToChannels: string[]; joinedChannels: string[] }
+  >,
   res: Response,
   next: NextFunction
 ) => {
@@ -235,7 +245,7 @@ const updateUser = (
 
   User.findById(userId)
     .populate('chats')
-    .then((user) => {
+    .then(async (user) => {
       if (!user) {
         const error = new Error('Could not find user.');
         // error.statusCode = 404;
@@ -245,26 +255,55 @@ const updateUser = (
         if (path in req.body) {
           if (path === 'name' || path === 'email' || path === 'password' || path === 'phone') {
             user[path] = req.body[path];
-          } else if (path === 'invitesFrom' || path === 'invitesTo' || path === 'friends') {
+          } else if (
+            path === 'invitesFrom' ||
+            path === 'invitesTo' ||
+            path === 'friends' ||
+            path === 'invitesToChannels' ||
+            path === 'joinedChannels'
+          ) {
             if (remove && remove.includes(path)) {
-              const newValueOfStr = (user[path] || []).map((id) => id.toString()).filter((id) => !req.body[path].includes(id));
-              user[path] = [...new Set(newValueOfStr)].map(
-                (id) => new mongoose.Types.ObjectId(id)
-              );
+              const newValueOfStr = (user[path] || [])
+                .map((id) => id.toString())
+                .filter((id) => !req.body[path].includes(id));
+              user[path] = [...new Set(newValueOfStr)].map((id) => new mongoose.Types.ObjectId(id));
             } else {
               const newValueOfStr = (user[path] || []).map((id) => id.toString()).concat(req.body[path]);
-              user[path] = [...new Set(newValueOfStr)].map(
-                (id) => new mongoose.Types.ObjectId(id)
-              );
+              user[path] = [...new Set(newValueOfStr)].map((id) => new mongoose.Types.ObjectId(id));
+            }
+          }
+        } else if (req.body.profile) {
+          if (path === 'profile.about') {
+            const about = req.body.profile.about;
+            if (about !== undefined) {
+              user.profile.about = about || '';
+            }
+          } else if (path === 'profile.banner') {
+            const banner = req.body.profile.banner;
+            if (banner !== undefined) {
+              user.profile.banner = banner || '';
             }
           }
         }
       });
 
+      if (req.file) {
+        if (req.file) {
+          const buffer = await sharp(req.file.path).resize().jpeg({ quality: 10 }).toBuffer();
+          fs.unlinkSync(req.file.path);
+          user.profile.avatar = Buffer.from(buffer.toString('base64'), 'base64');
+        }
+      }
+
       return user.save();
     })
     .then((user) => {
-      res.status(200).json({ messageInfo: 'User updated!', user: userDTO(user) });
+      user
+        .populate(['chats', 'invitesToChannels', 'joinedChannels'])
+        .then((user) => {
+          res.status(200).json({ messageInfo: 'User updated!', user: userDTO(user) });
+        })
+        .catch((err) => requestErrorHandler(err, next));
     })
     .catch((err) => {
       if (!err.statusCode) {
@@ -347,6 +386,88 @@ const getInvitedFromFriends: Handler = (req, res, next) => {
     .catch((err) => requestErrorHandler(err, next));
 };
 
+const getRelatedServers: Handler = (req, res, next) => {
+  const userId = req.params.id;
+
+  User.findById(userId)
+    .populate([
+      {
+        path: 'invitesToChannels',
+        populate: { path: 'serverId', populate: { path: 'owner' } },
+      },
+      {
+        path: 'joinedChannels',
+        populate: { path: 'serverId', populate: { path: 'owner' } },
+      },
+    ])
+    .then((user) => {
+      if (handleDocumentNotFound(user)) {
+        Server.find({ owner: userId })
+          .populate('owner')
+          .then((servers) => {
+            const invitedServers: (DTOServer | null)[] = (user.invitesToChannels || [])
+              .map((channel) => {
+                const server = (channel as unknown as FetchedChannel).serverId as unknown as FetchedServer;
+                if (!server) {
+                  return null;
+                }
+                return serverDTO((channel as unknown as FetchedChannel).serverId as unknown as FetchedServer);
+              })
+              .filter(Boolean);
+            const joinedServers: (DTOServer | null)[] = (user.joinedChannels || [])
+              .map((channel) => {
+                const server = (channel as unknown as FetchedChannel).serverId as unknown as FetchedServer;
+                if (!server) {
+                  return null;
+                }
+                return serverDTO((channel as unknown as FetchedChannel).serverId as unknown as FetchedServer);
+              })
+              .filter(Boolean);
+            const ownServers = servers.map((server) => serverDTO(server as unknown as FetchedServer));
+            const allServers = invitedServers.concat(joinedServers, ownServers);
+            const uniqueAllServers = allServers.filter((server, i) => {
+              if (!server) {
+                return false;
+              }
+              return allServers.findIndex((s) => s && s.id === server.id) === i;
+            });
+            res.status(200).json({
+              message: 'Related servers fetched.',
+              servers: uniqueAllServers,
+            });
+          });
+      }
+    });
+};
+
+const getRelatedChannels: Handler = (req, res, next) => {
+  const userId = req.params.id;
+
+  User.findById(userId).then((user) => {
+    if (handleDocumentNotFound(user)) {
+      Server.find({ owner: userId }).then((servers) => {
+        const ownServersIDs = servers.map((server) => server.id);
+        const inviteChannelsIDs = user.invitesToChannels.map((c) => c.toString());
+        Channel.find({
+          $or: [
+            {
+              _id: { $in: inviteChannelsIDs },
+            },
+            {
+              serverId: { $in: ownServersIDs },
+            },
+          ],
+        }).then((channels) => {
+          console.log(inviteChannelsIDs);
+          console.log(channels);
+        });
+      });
+    }
+  });
+
+  res.status(200).end();
+};
+
 const updateFriends: Handler = async (req, res, next) => {
   const userId = req.params.id;
   let friendIds = req.body.friends;
@@ -424,4 +545,6 @@ export default {
   checkAuth,
   logout,
   searchUsers,
+  getRelatedServers,
+  getRelatedChannels,
 };

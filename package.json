@@ -4,9 +4,8 @@
   "description": "",
   "main": "src/app.ts",
   "scripts": {
-    "start": "nodemon src/app.ts",
     "dev": "nodemon src/app.ts",
-    "build": "tsc --build"
+    "dev:front": "set MODE=front&& nodemon src/app.ts"
   },
   "repository": {
     "type": "git",
@@ -25,6 +24,7 @@
     "@types/mongoose-delete": "^0.5.9",
     "@types/passport": "^1.0.11",
     "@types/passport-local": "^1.0.35",
+    "@types/sharp": "^0.31.1",
     "@types/uuid": "^9.0.0",
     "@typescript-eslint/eslint-plugin": "^5.46.1",
     "@typescript-eslint/parser": "^5.46.1",
@@ -65,10 +65,8 @@
     "passport": "^0.6.0",
     "passport-local": "^1.0.0",
     "pubsub-js": "^1.9.4",
+    "sharp": "^0.31.3",
     "socket.io": "^4.5.4",
     "uuid": "^9.0.0"
-  },
-  "engines": {
-    "node": "16.13.1"
   }
 }

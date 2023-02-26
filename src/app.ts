@@ -26,7 +26,7 @@ declare module "express-session" {
   }
 }
 
-const whitelist = ['http://localhost:3000', 'http://localhost:8005', 'https://superconscience-discord-clone.netlify.app'];
+const whitelist = ['http://localhost:3000', 'http://localhost:8005'];
 
 mongoose.set('strictQuery', true);
 
@@ -37,9 +37,6 @@ const mongooseUrl = isLocalConnection
   : 'mongodb+srv://superconscience:QrtczmnqiciavAoI@node.wiauk.mongodb.net/?retryWrites=true&w=majority';
 
 type AppClients = Record<string, AppSocket>;
-
-const mongoURL = 'mongodb+srv://superconscience:QrtczmnqiciavAoI@node.wiauk.mongodb.net/discord?retryWrites=true&w=majority';
-const sessionSecret = 'sessionsecret';
 
 export class App {
   private server: http.Server;
@@ -79,9 +76,9 @@ export class App {
       session({
         resave: true,
         saveUninitialized: true,
-        secret: sessionSecret,
+        secret: env.SESSION_SECRET,
         store: new MongoStore({
-          mongoUrl: mongoURL,
+          mongoUrl: env.MONGO_URI_LOCAL,
           mongoOptions: {
             connectTimeoutMS: 10000,
           },
@@ -123,8 +120,15 @@ export class App {
   }
 
   public Start() {
+    if (process.env.MODE === 'front') {
+      this.server.listen(this.port, () => {
+        console.log(`Server listening on port ${this.port}. No database connection`);
+      });
+      return;
+    }
     mongoose
-      .connect(mongoURL)
+      // .connect(env.MONGO_URI_LOCAL)
+      .connect(env.MONGO_URI)
       .then((result) => {
         // serversController.seedServers();
         this.server.listen(this.port, () => {
@@ -151,4 +155,4 @@ export class App {
   }
 }
 
-new App(Number(process.env.PORT) ?? 8000).Start();
+new App(env.PORT).Start();
