@@ -72,9 +72,9 @@ export class App {
       session({
         resave: true,
         saveUninitialized: true,
-        secret: env.SESSION_SECRET,
+        secret: 'sessionsecret',
         store: new MongoStore({
-          mongoUrl: env.MONGO_URI_LOCAL,
+          mongoUrl: mongooseUrl,
           mongoOptions: {
             connectTimeoutMS: 10000,
           },
@@ -151,4 +151,4 @@ export class App {
   }
 }
 
-new App(env.PORT).Start();
+new App(Number(process.env.PORT ?? 8000)).Start();
