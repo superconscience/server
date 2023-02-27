@@ -55,30 +55,30 @@ export class App {
     const app = express();
 
     app.set('port', this.port || 3000);
-    app.use((_req, res, next) => {
-      res.header('Access-Control-Allow-Origin', '*');
-      res.header('Access-Control-Allow-Headers', '*');
-      res.header('Access-Control-Allow-Methods', 'POST, PUT, PATCH, GET, DELETE, OPTIONS');
+    // app.use((_req, res, next) => {
+    //   res.header('Access-Control-Allow-Origin', '*');
+    //   res.header('Access-Control-Allow-Headers', '*');
+    //   res.header('Access-Control-Allow-Methods', 'POST, PUT, PATCH, GET, DELETE, OPTIONS');
     
-      next();
-    });
+    //   next();
+    // });
     app.use(express.static(path.join(__dirname, '../../client/dist')));
 
-    // app.use(
-    //   cors({
-    //     // origin: function (origin, callback) {
-    //     //   if (origin && whitelist.indexOf(origin) !== -1) {
-    //     //     callback(null, true);
-    //     //   } else {
-    //     //     callback(null, true);
-    //     //     // callback(new Error('Not allowed by CORS'))
-    //     //   }
-    //     // },
-    //     origin: '*',
-    //     credentials: true,
-    //     // allowedHeaders: '*'
-    //   })
-    // );
+    app.use(
+      cors({
+        // origin: function (origin, callback) {
+        //   if (origin && whitelist.indexOf(origin) !== -1) {
+        //     callback(null, true);
+        //   } else {
+        //     callback(null, true);
+        //     // callback(new Error('Not allowed by CORS'))
+        //   }
+        // },
+        origin: '*',
+        credentials: true,
+        allowedHeaders: '*',
+      })
+    );
     app.use(compression());
     app.use(express.json());
     app.use(bodyParser.urlencoded({ extended: true }));
