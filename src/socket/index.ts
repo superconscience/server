@@ -6,8 +6,9 @@ import { ClientToServerEvents, InterServerEvents, ServerToClientEvents, SocketDa
 export const initSocket = (app: App) => {
   const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(app.getServer(), {
     cors: {
-      origin: '*',
-      methods: ['POST, PUT, PATCH, GET, DELETE, OPTIONS'],
+      origin: 'https://superconscience-discord-clone.netlify.app',
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+      allowedHeaders: ['Access-Control-Allow-Origin', 'Access-Control-Allow-Credentials'],
       credentials: true,
     },
   });
