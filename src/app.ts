@@ -64,21 +64,21 @@ export class App {
     });
     app.use(express.static(path.join(__dirname, '../../client/dist')));
 
-    app.use(
-      cors({
-        // origin: function (origin, callback) {
-        //   if (origin && whitelist.indexOf(origin) !== -1) {
-        //     callback(null, true);
-        //   } else {
-        //     callback(null, true);
-        //     // callback(new Error('Not allowed by CORS'))
-        //   }
-        // },
-        origin: '*',
-        credentials: true,
-        // allowedHeaders: '*'
-      })
-    );
+    // app.use(
+    //   cors({
+    //     // origin: function (origin, callback) {
+    //     //   if (origin && whitelist.indexOf(origin) !== -1) {
+    //     //     callback(null, true);
+    //     //   } else {
+    //     //     callback(null, true);
+    //     //     // callback(new Error('Not allowed by CORS'))
+    //     //   }
+    //     // },
+    //     origin: '*',
+    //     credentials: true,
+    //     // allowedHeaders: '*'
+    //   })
+    // );
     app.use(compression());
     app.use(express.json());
     app.use(bodyParser.urlencoded({ extended: true }));
