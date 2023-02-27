@@ -1,7 +1,7 @@
 import express from 'express';
 import http from 'http';
 import mongoose from 'mongoose';
-import compression from "compression";
+import compression from 'compression';
 import path from 'path';
 import bodyParser from 'body-parser';
 import session from 'express-session';
@@ -17,20 +17,25 @@ import { initSocket } from './socket';
 import cors from 'cors';
 import * as passportConfig from './passport';
 import env from './config';
-import passport from "passport";
+import passport from 'passport';
 import { AppSocket, ClientToServerEvents, InterServerEvents, ServerToClientEvents, SocketData } from './socket/types';
 
-declare module "express-session" {
+declare module 'express-session' {
   interface SessionData {
     returnTo: string;
   }
 }
 
-const whitelist = ['http://localhost:3000', 'http://localhost:8005', 'https://superconscience-discord-clone.netlify.app/'];
+const whitelist = [
+  'http://localhost:3000',
+  'http://localhost:8005',
+  'https://superconscience-discord-clone.netlify.app/',
+];
 
 mongoose.set('strictQuery', true);
 
-const mongooseUrl = 'mongodb+srv://superconscience:QrtczmnqiciavAoI@node.wiauk.mongodb.net/discord?retryWrites=true&w=majority';
+const mongooseUrl =
+  'mongodb+srv://superconscience:QrtczmnqiciavAoI@node.wiauk.mongodb.net/discord?retryWrites=true&w=majority';
 
 type AppClients = Record<string, AppSocket>;
 
@@ -50,6 +55,16 @@ export class App {
     const app = express();
 
     app.set('port', this.port || 3000);
+    app.use(function (req, res, next) {
+      // Website you wish to allow to connect
+      res.setHeader('Access-Control-Allow-Origin', '*');
+
+      // to the API (e.g. in case you use sessions)
+      // res.setHeader('Access-Control-Allow-Credentials', true);
+
+      // Pass to next layer of middleware
+      next();
+    });
     app.use(express.static(path.join(__dirname, '../../client/dist')));
 
     app.use(
@@ -89,18 +104,19 @@ export class App {
     });
     app.use((req, res, next) => {
       // After successful login, redirect back to the intended page
-      if (!req.user &&
-      req.path !== "/login" &&
-      req.path !== "/signup" &&
-      !req.path.match(/^\/auth/) &&
-      !req.path.match(/\./)) {
-          req.session.returnTo = req.path;
-      } else if (req.user &&
-      req.path == "/account") {
-          req.session.returnTo = req.path;
+      if (
+        !req.user &&
+        req.path !== '/login' &&
+        req.path !== '/signup' &&
+        !req.path.match(/^\/auth/) &&
+        !req.path.match(/\./)
+      ) {
+        req.session.returnTo = req.path;
+      } else if (req.user && req.path == '/account') {
+        req.session.returnTo = req.path;
       }
       next();
-  });
+    });
 
     // TODO: add validation
     app.use('/test', testRoutes);
