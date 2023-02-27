@@ -74,10 +74,18 @@ const login = async (req: TypedRequest, res: Response, next: NextFunction): Prom
 };
 
 const logout = (req: TypedRequest, res: Response, next: NextFunction): void => {
+  // if (!req.user) {
+  //   res.send(200).end();
+  //   return;
+  // }
+  let id: string;
   if (!req.user) {
-    res.send(200).end();
+    id = req.params.userId;
+  } else {
+    const user = req.user as HydratedDocument<UserDocument>;
+    id = user.id;
   }
-  const { id } = req.user as HydratedDocument<UserDocument>;
+  console.log(id);
   req.logout((err) => {
     if (err) {
       next(err);
