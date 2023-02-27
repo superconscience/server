@@ -55,14 +55,11 @@ export class App {
     const app = express();
 
     app.set('port', this.port || 3000);
-    app.use(function (req, res, next) {
-      // Website you wish to allow to connect
-      res.setHeader('Access-Control-Allow-Origin', '*');
-
-      // to the API (e.g. in case you use sessions)
-      // res.setHeader('Access-Control-Allow-Credentials', true);
-
-      // Pass to next layer of middleware
+    app.use((_req, res, next) => {
+      res.header('Access-Control-Allow-Origin', '*');
+      res.header('Access-Control-Allow-Headers', '*');
+      res.header('Access-Control-Allow-Methods', 'POST, PUT, PATCH, GET, DELETE, OPTIONS');
+    
       next();
     });
     app.use(express.static(path.join(__dirname, '../../client/dist')));
