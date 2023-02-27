@@ -44,18 +44,18 @@ const getServer: Handler = (req, res, next) => {
 };
 
 const createServer: Handler = async (req, res, next) => {
-  let imageBuffer: Buffer | null = null;
-  if (req.file) {
-    const buffer = await sharp(req.file.path).resize().jpeg({ quality: 10 }).toBuffer();
-    fs.unlinkSync(req.file.path);
-    imageBuffer = Buffer.from(buffer.toString('base64'), 'base64');
-    // const image = fs.readFileSync(req.file.path);
-    // const encImage = image.toString('base64');
-    // imageBuffer = Buffer.from(encImage, 'base64');
-  }
+  // let imageBuffer: Buffer | null = null;
+  // if (req.file) {
+  //   const buffer = await sharp(req.file.path).resize().jpeg({ quality: 10 }).toBuffer();
+  //   fs.unlinkSync(req.file.path);
+  //   imageBuffer = Buffer.from(buffer.toString('base64'), 'base64');
+  //   // const image = fs.readFileSync(req.file.path);
+  //   // const encImage = image.toString('base64');
+  //   // imageBuffer = Buffer.from(encImage, 'base64');
+  // }
   const server = new Server({
     name: req.body.name,
-    image: imageBuffer,
+    // image: imageBuffer,
     owner: req.body.owner,
   });
 
