@@ -29,7 +29,7 @@ declare module 'express-session' {
 const whitelist = [
   'http://localhost:3000',
   'http://localhost:8005',
-  'https://superconscience-discord-clone.netlify.app/',
+  'https://superconscience-discord-clone.netlify.app',
 ];
 
 mongoose.set('strictQuery', true);
@@ -78,6 +78,7 @@ export class App {
           }
         },
         credentials: true,
+        allowedHeaders: '*'
       })
     );
     app.use(compression());
