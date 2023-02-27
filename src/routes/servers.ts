@@ -10,7 +10,8 @@ const router = express.Router();
 router.get('/', serversController.getServers);
 router.get('/:id', serversController.getServer);
 router.get('/:id/channels', serversController.getChannels);
-router.post('/', uploader.single('image') , serversController.createServer);
+// router.post('/', uploader.single('image') , serversController.createServer);
+router.post('/', serversController.createServer);
 router.patch('/:id', serversController.updateServer);
 router.delete('/:id', serversController.deleteServer);
 
